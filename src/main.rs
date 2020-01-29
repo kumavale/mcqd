@@ -26,15 +26,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let max_nod = number_of_digits(s_len);
     let mut answer_key = answer_key.iter();
 
-    for (i, sheet) in answer_sheet.iter().enumerate() {
+    for (i, sheet) in (1..).zip(answer_sheet.iter()) {
         let key   = answer_key.next().unwrap();
         answers_sum += 1;
 
         if sheet == key {
             correct_answers += 1;
-            println!("{}{}. \x1b[32m{}\x1b[0m", " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet);
+            println!("{}{}. \x1b[32m{}\x1b[0m", " ".repeat(max_nod-number_of_digits(i)), i, sheet);
         } else {
-            println!("{}{}. \x1b[31m{} : {}\x1b[0m", " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet, key);
+            println!("{}{}. \x1b[31m{} : {}\x1b[0m", " ".repeat(max_nod-number_of_digits(i)), i, sheet, key);
         }
     }
 
@@ -47,19 +47,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn split(s: &str) -> (Vec<String>, usize) {
     let mut vec = Vec::new();
     let mut len = 0;
-    let mut block_comment_now = false;
+    let mut block_comment_nest = 0;
     let s = s.replace("/*", " /* ").replace("*/", " */ ");
 
     'outer: for line in s.lines() {
         for token in line.split_whitespace() {
             // skip block comment  (/* ... */)
-            if block_comment_now {
-                if token == "*/" {
-                    block_comment_now = false;
+            if 0 < block_comment_nest {
+                if token == "/*" {
+                    block_comment_nest += 1;
+                } else if token == "*/" {
+                    block_comment_nest -= 1;
                 }
                 continue;
-            } else if token == "/*" {
-                block_comment_now = true;
+            }
+            if token == "/*" {
+                block_comment_nest += 1;
                 continue;
             }
             // skip line comment  (//)
