@@ -32,11 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if sheet == key {
             correct_answers += 1;
-            println!("{}{}. \x1b[32m{}\x1b[0m",
-                " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet);
+            println!("{}{}. \x1b[32m{}\x1b[0m", " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet);
         } else {
-            println!("{}{}. \x1b[31m{} : {}\x1b[0m",
-                " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet, key);
+            println!("{}{}. \x1b[31m{} : {}\x1b[0m", " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet, key);
         }
     }
 
@@ -46,19 +44,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn split(s: &str) -> (Vec<&str>, usize) {
+fn split(s: &str) -> (Vec<String>, usize) {
     let mut vec = Vec::new();
     let mut len = 0;
+    let mut block_comment_now = false;
+    let s = s.replace("/*", " /* ").replace("*/", " */ ");
 
     'outer: for line in s.lines() {
         for token in line.split_whitespace() {
-            // skip comment  (//)
+            // skip block comment  (/* ... */)
+            if block_comment_now {
+                if token == "*/" {
+                    block_comment_now = false;
+                }
+                continue;
+            } else if token == "/*" {
+                block_comment_now = true;
+                continue;
+            }
+            // skip line comment  (//)
             if token.starts_with("//") {
                 continue 'outer;
             }
 
             len += 1;
-            vec.push(token);
+            vec.push(token.to_string());
             break;
         }
     }
