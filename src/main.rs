@@ -13,20 +13,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let answer_sheet = fs::read_to_string(&args[1])?;
     let answer_key   = fs::read_to_string(&args[2])?;
 
-    let answer_sheet = answer_sheet.split_whitespace();
-    let mut answer_key = answer_key.split_whitespace();
+    let (answer_sheet, s_len) = split(&answer_sheet);
+    let (answer_key,   k_len) = split(&answer_key);
     let mut answers_sum = 0;
     let mut correct_answers = 0;
 
-    for (i, sheet) in answer_sheet.enumerate() {
+    if s_len != k_len {
+        eprintln!("missing answers count");
+        std::process::exit(1);
+    }
+
+    let max_nod = number_of_digits(s_len);
+    let mut answer_key = answer_key.iter();
+
+    for (i, sheet) in answer_sheet.iter().enumerate() {
         let key   = answer_key.next().unwrap();
         answers_sum += 1;
 
         if sheet == key {
             correct_answers += 1;
-            println!("{}. \x1b[32m{}\x1b[0m", i+1, sheet);
+            println!("{}{}. \x1b[32m{}\x1b[0m",
+                " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet);
         } else {
-            println!("{}. \x1b[31m{} : {}\x1b[0m", i+1, sheet, key);
+            println!("{}{}. \x1b[31m{} : {}\x1b[0m",
+                " ".repeat(max_nod-number_of_digits(i+1)), i+1, sheet, key);
         }
     }
 
@@ -34,5 +44,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n{}/{} ... {}%", correct_answers, answers_sum, percentage);
 
     Ok(())
+}
+
+fn split(s: &str) -> (Vec<&str>, usize) {
+    let mut vec = Vec::new();
+    let mut len = 0;
+
+    'outer: for line in s.lines() {
+        for token in line.split_whitespace() {
+            // skip comment  (//)
+            if token.starts_with("//") {
+                continue 'outer;
+            }
+
+            len += 1;
+            vec.push(token);
+            break;
+        }
+    }
+
+    (vec, len)
+}
+
+fn number_of_digits(mut num: usize) -> usize {
+    let mut nod = 0;
+
+    while num != 0 {
+        nod += 1;
+        num /= 10;
+    }
+
+    nod
 }
 
